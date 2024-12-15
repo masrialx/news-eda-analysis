@@ -1,229 +1,245 @@
-### **Project Title: News Data Analysis Pipeline**
+Correlation Between News and Stock Movement**
+
+### **Project Title: Stock Sentiment Analysis Dashboard**
 
 ---
 
 ## **Overview**
 
-This task focuses on setting up a Python environment, managing version control with Git and GitHub, and configuring CI/CD workflows. Additionally, it includes performing **Exploratory Data Analysis (EDA)** on a news dataset, covering descriptive statistics, sentiment analysis, topic modeling, time series analysis, and publisher analysis.
+This task involves analyzing the relationship between news sentiment and stock price movements. By aligning news data with stock price data and performing sentiment analysis, we aim to calculate correlations between news sentiment and daily stock returns.
 
 ---
 
 ## **Folder Structure**
 
-The suggested folder structure for this task is:
+The recommended folder structure for Task 3 is:
 
 ```
 ├── .vscode/
-│   └── settings.json            # VSCode settings
+│   └── settings.json              # VSCode settings
 ├── .github/
 │   └── workflows/
-│       └── unittests.yml        # GitHub Actions workflow for CI/CD
-├── .gitignore                   # Ignore unnecessary files for Git
-├── requirements.txt             # Project dependencies
-├── README.md                    # Documentation for Task 1
+│       └── unittests.yml          # CI/CD workflow for GitHub Actions
+├── .gitignore                     # Ignore unnecessary files for Git
+├── requirements.txt               # Project dependencies
+├── README.md                      # Documentation for Task 3
+├── data/
+│   ├── stock_data.csv             # Stock price dataset
+│   └── news_data.csv              # News headlines dataset
 ├── src/
-│   ├── __init__.py              # Initialization for the source code
+│   ├── __init__.py                # Initialization for source code
+│   └── sentiment_correlation.py   # Script for sentiment analysis and correlation
 ├── notebooks/
-│   ├── __init__.py              # Initialization for notebooks
-│   └── README.md                # Notebook documentation
+│   └── task3_correlation.ipynb    # Jupyter notebook for analysis
 ├── tests/
-│   ├── __init__.py              # Initialization for tests
+│   ├── __init__.py                # Initialization for tests
 └── scripts/
-    ├── __init__.py              # Initialization for scripts
-    └── README.md                # Script documentation
+    └── run_task3_analysis.py      # Script to run Task 3 analysis
 ```
 
 ---
 
 ## **Steps to Complete the Task**
 
-### **1. Setting Up Python Environment**
+### **1. Merging Task 2 Branch**
 
-1. **Create a Virtual Environment**:
+1. **Merge `task-2` into `main` via Pull Request (PR)**:
+   - Create a PR in GitHub to merge `task-2` into `main`.
+   - Ensure the PR has a detailed description.
+   - After review, merge the PR.
+
+2. **Create a New Branch for Task 3**:
    ```bash
-   python -m venv venv
+   git checkout -b task-3
    ```
-2. **Activate the Virtual Environment**:
-   - **On Windows**:
-     ```bash
-     .\venv\Scripts\activate
-     ```
-   - **On macOS/Linux**:
-     ```bash
-     source venv/bin/activate
-     ```
 
-3. **Install Dependencies**:
-   Create a `requirements.txt` file and add necessary libraries:
+---
+
+### **2. Setting Up the Environment**
+
+1. **Activate Virtual Environment**:
+   ```bash
+   source venv/bin/activate
+   ```
+
+2. **Install Dependencies**:
+
+   Add the following libraries to `requirements.txt`:
+
    ```text
    pandas
    numpy
    matplotlib
-   seaborn
    nltk
    textblob
+   scipy
    ```
-   Install dependencies using:
+
+   **Install the dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
----
-
-### **2. Git Version Control**
-
-1. **Initialize Git Repository**:
-   ```bash
-   git init
-   ```
-
-2. **Create a New Branch for Task 1**:
-   ```bash
-   git checkout -b task-1
-   ```
-
-3. **Commit Changes Frequently**:
-   ```bash
-   git add .
-   git commit -m "Initial setup for Task 1: Project structure and dependencies"
-   ```
-
-4. **Push to GitHub**:
-   ```bash
-   git remote add origin <your-repository-url>
-   git push -u origin task-1
+3. **Download NLTK Data**:
+   ```python
+   import nltk
+   nltk.download('punkt')
+   nltk.download('vader_lexicon')
    ```
 
 ---
 
-### **3. CI/CD Configuration**
+### **3. Loading and Preparing Data**
 
-Add a GitHub Actions workflow in `.github/workflows/unittests.yml`:
+#### **Stock Data (`stock_data.csv`)**
 
-```yaml
-name: CI/CD Pipeline
+Ensure your stock data has the following columns:
 
-on:
-  push:
-    branches:
-      - task-1
+- **Date**
+- **Close**
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+#### **News Data (`news_data.csv`)**
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+Ensure your news data has the following columns:
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+- **Date**
+- **Headline**
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run tests
-        run: pytest
-```
-
----
-
-## **4. Exploratory Data Analysis (EDA)**
-
-### **Descriptive Statistics**
-
-1. **Headline Length Statistics**:
-   - Calculate basic statistics (mean, median, min, max) for headline lengths.
-
-2. **Articles per Publisher**:
-   - Count the number of articles per publisher to identify active sources.
-
-3. **Publication Trends**:
-   - Analyze publication dates to detect trends during specific events or days.
-
-### **Sample Code for Descriptive Statistics**
+### **Sample Code for Data Loading**
 
 ```python
 import pandas as pd
 
-# Load the dataset
-df = pd.read_csv('news_data.csv')
+# Load stock data
+stock_df = pd.read_csv('data/stock_data.csv', parse_dates=['Date'])
+stock_df.set_index('Date', inplace=True)
 
-# Headline length statistics
-df['headline_length'] = df['headline'].apply(len)
-print(df['headline_length'].describe())
+# Load news data
+news_df = pd.read_csv('data/news_data.csv', parse_dates=['Date'])
+news_df.set_index('Date', inplace=True)
 
-# Articles per publisher
-print(df['publisher'].value_counts())
+print(stock_df.head())
+print(news_df.head())
 ```
 
 ---
 
-### **Text Analysis (Sentiment Analysis & Topic Modeling)**
+### **4. Normalizing Dates**
 
-1. **Sentiment Analysis**:
-   - Use `TextBlob` to classify headlines as positive, negative, or neutral.
+Align the dates in the news dataset with the trading days in the stock dataset.
 
-2. **Keyword/Topic Extraction**:
-   - Identify common keywords or significant topics using NLP techniques.
+### **Sample Code for Date Alignment**
+
+```python
+# Ensure news dates align with stock trading days
+news_df = news_df[news_df.index.isin(stock_df.index)]
+```
+
+---
+
+### **5. Sentiment Analysis**
+
+Use **TextBlob** or **NLTK's Vader** to perform sentiment analysis on news headlines.
 
 ### **Sample Code for Sentiment Analysis**
 
 ```python
-from textblob import TextBlob
+from nltk.sentiment import SentimentIntensityAnalyzer
 
-# Function for sentiment analysis
-def get_sentiment(text):
-    return TextBlob(text).sentiment.polarity
+# Initialize Sentiment Analyzer
+sia = SentimentIntensityAnalyzer()
 
-df['sentiment'] = df['headline'].apply(get_sentiment)
-print(df[['headline', 'sentiment']])
+# Function to compute sentiment score
+def get_sentiment_score(headline):
+    sentiment = sia.polarity_scores(headline)
+    return sentiment['compound']
+
+# Apply sentiment analysis to news headlines
+news_df['Sentiment'] = news_df['Headline'].apply(get_sentiment_score)
+
+print(news_df.head())
 ```
 
 ---
 
-### **Time Series Analysis**
+### **6. Calculating Daily Stock Returns**
 
-1. **Publication Frequency**:
-   - Analyze the frequency of news publications over time to detect spikes related to events.
+Compute daily percentage changes in the closing prices to represent stock movements.
 
-### **Sample Code for Time Series Analysis**
+### **Sample Code for Daily Returns**
 
 ```python
-df['date'] = pd.to_datetime(df['date'])
-df.set_index('date', inplace=True)
+# Calculate daily returns
+stock_df['Daily_Return'] = stock_df['Close'].pct_change()
 
-# Plot publication frequency
-df.resample('D').size().plot(title='Publication Frequency')
+print(stock_df.head())
 ```
 
 ---
 
-### **Publisher Analysis**
+### **7. Aggregating Daily Sentiments**
 
-1. **Identify Top Publishers**:
-   - Determine which publishers contribute the most articles.
+Compute the average sentiment score for each day if there are multiple news articles on the same day.
 
-2. **Domain Analysis** (if emails are used as publishers):
-   - Extract unique domains from email addresses to identify frequent contributors.
-
-### **Sample Code for Publisher Analysis**
+### **Sample Code for Aggregating Sentiments**
 
 ```python
-# Top publishers
-print(df['publisher'].value_counts().head(10))
+# Group by date and calculate average sentiment score
+daily_sentiment = news_df.groupby('Date')['Sentiment'].mean()
+
+print(daily_sentiment.head())
+```
+
+---
+
+### **8. Correlation Analysis**
+
+Calculate the **Pearson correlation coefficient** between daily sentiment scores and stock returns.
+
+### **Sample Code for Correlation**
+
+```python
+from scipy.stats import pearsonr
+
+# Align data
+combined_df = pd.concat([stock_df['Daily_Return'], daily_sentiment], axis=1).dropna()
+
+# Calculate Pearson correlation
+correlation, p_value = pearsonr(combined_df['Daily_Return'], combined_df['Sentiment'])
+
+print(f"Pearson Correlation: {correlation:.2f}")
+print(f"P-Value: {p_value:.4f}")
+```
+
+---
+
+### **9. Visualizing the Correlation**
+
+### **Sample Code for Visualization**
+
+```python
+import matplotlib.pyplot as plt
+
+plt.scatter(combined_df['Sentiment'], combined_df['Daily_Return'], alpha=0.7)
+plt.title('Correlation between News Sentiment and Stock Returns')
+plt.xlabel('Average Daily Sentiment Score')
+plt.ylabel('Daily Stock Return')
+plt.grid(True)
+plt.show()
 ```
 
 ---
 
 ## **Key Performance Indicators (KPIs)**
 
-- **Development Environment Setup**: Successfully set up the Python environment and dependencies.
-- **Git Workflow**: Frequent and descriptive commits.
-- **CI/CD Pipeline**: Configured automated testing using GitHub Actions.
-- **EDA Analysis**: Completed descriptive statistics, sentiment analysis, time series, and publisher analysis.
+1. **Proactivity to Self-Learn**:
+   - Share references or resources used for learning sentiment analysis and correlation techniques.
+
+2. **Sentiment Analysis**:
+   - Ensure sentiment scores accurately reflect the tone of the news headlines.
+
+3. **Correlation Strength**:
+   - Evaluate the strength and significance of the correlation coefficient.
 
 ---
 
@@ -234,14 +250,14 @@ print(df['publisher'].value_counts().head(10))
    source venv/bin/activate
    ```
 
-2. **Install Dependencies**:
+2. **Run Analysis Script**:
    ```bash
-   pip install -r requirements.txt
+   python scripts/run_task3_analysis.py
    ```
 
-3. **Run EDA Script**:
+3. **Open the Jupyter Notebook**:
    ```bash
-   python scripts/eda_analysis.py
+   jupyter notebook notebooks/task3_correlation.ipynb
    ```
 
 ---
@@ -250,16 +266,15 @@ print(df['publisher'].value_counts().head(10))
 
 - **Commit Example 1**:
   ```bash
-  git commit -m "Added initial folder structure and requirements.txt"
+  git commit -m "Performed sentiment analysis on news headlines"
   ```
 
 - **Commit Example 2**:
   ```bash
-  git commit -m "Performed headline length analysis and publisher counts"
+  git commit -m "Calculated daily stock returns and aligned datasets"
   ```
 
 - **Commit Example 3**:
   ```bash
-  git commit -m "Added sentiment analysis for news headlines"
+  git commit -m "Performed correlation analysis between sentiment scores and stock returns"
   ```
-
