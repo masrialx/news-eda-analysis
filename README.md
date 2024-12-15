@@ -1,4 +1,4 @@
-# **Task 1: Git and GitHub**
+ Git and GitHub**
 
 ### **Project Title: News Data Analysis Pipeline**
 
